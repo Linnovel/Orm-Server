@@ -8,7 +8,11 @@ import {
   updateProductAvailability,
 } from "./handlers/product"
 import { body, param } from "express-validator"
-import { handleInputErrors } from "./middleware"
+import {
+  handleInputErrors,
+  validateIdParam,
+  validateProductBody,
+} from "./middleware"
 
 const router = Router()
 
@@ -16,8 +20,8 @@ router.get("/", getProducts)
 
 router.get(
   "/:id",
-  param("id", "El id debe ser un numero").isInt(),
-  handleInputErrors,
+  // param("id", "El id debe ser un numero").isInt(),
+  validateIdParam,
   getProductById
 )
 
@@ -33,6 +37,7 @@ router.post(
     .withMessage("El precio no es valido")
     .isNumeric(),
   handleInputErrors,
+  validateProductBody,
   createProducts
 )
 
@@ -50,7 +55,7 @@ router.put(
     "availability",
     "Valor para disponibilidad no es valido"
   ).isBoolean(),
-  handleInputErrors,
+  validateIdParam,
   updateProduct
 )
 
@@ -60,10 +65,10 @@ router.patch(
     "availability",
     "Valor para disponibilidad no es valido"
   ).isBoolean(),
-  handleInputErrors,
+  validateIdParam,
   updateProductAvailability
 )
 
-router.delete("/:id", deleteProduct)
+router.delete("/:id", validateIdParam, deleteProduct)
 
 export default router

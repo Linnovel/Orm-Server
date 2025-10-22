@@ -1,12 +1,17 @@
 import { Request, Response } from "express"
 import Products from "../models/Products.model"
+import {
+  IdParamSchema,
+  ProductsSchema,
+  UpdateProductsSchema,
+} from "../schemas"
 
 export async function createProducts(
   req: Request,
   res: Response
 ) {
   try {
-    const product = await Products.create(req.body)
+    const product = await Products.create(req.validatedBody)
     res.json({ data: product })
   } catch (error) {
     console.log(error)
@@ -61,15 +66,33 @@ export async function updateProduct(
   res: Response
 ) {
   try {
-    const { id } = req.params
+    //Se deja este para validar el body
+    const bodyParse = UpdateProductsSchema.safeParse(
+      req.body
+    )
+
+    if (!bodyParse.success) {
+      return res.status(400).json({
+        message: "No se pudo actualizar el producto",
+      })
+    }
+
+    // const idParse = IdParamSchema.safeParse(req.params)
+    // if (!idParse.success) {
+    //   return res.status(400).json({
+    //     message: "El id proporcionado no es válido",
+    //   })
+    // }
+
+    // const { id } = idParse.data
+    const id = req.validateId!
     const product = await Products.findByPk(id)
     if (!product) {
       return res
         .status(404)
         .json({ message: "Producto no encontrado" })
     }
-    await product.update(req.body)
-    await product.save()
+    await product.update(bodyParse.data)
     res.json({ data: product })
   } catch (error) {
     console.log(
@@ -87,7 +110,14 @@ export async function updateProductAvailability(
   res: Response
 ) {
   try {
-    const { id } = req.params
+    const parsed = IdParamSchema.safeParse(req.params)
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: "El id proporcionado no es válido",
+      })
+    }
+
+    const { id } = parsed.data
     const product = await Products.findByPk(id)
     if (!product) {
       return res
@@ -113,7 +143,13 @@ export async function deleteProduct(
   res: Response
 ) {
   try {
-    const { id } = req.params
+    const parsed = IdParamSchema.safeParse(req.params)
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: "El id proporcionado no es válido",
+      })
+    }
+    const { id } = parsed.data
     const product = await Products.findByPk(id)
     if (!product) {
       return res
